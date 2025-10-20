@@ -23,12 +23,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private final LoggedInViewModel loggedInViewModel;
     private final JLabel passwordErrorField = new JLabel();
     private ChangePasswordController changePasswordController = null;
-    private LogoutController logoutController;
+    private LogoutController logoutController; // keep this instance
 
     private final JLabel username;
-
     private final JButton logOut;
-
     private final JTextField passwordInputField = new JTextField(15);
     private final JButton changePassword;
 
@@ -57,7 +55,6 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         passwordInputField.getDocument().addDocumentListener(new DocumentListener() {
-
             private void documentListenerHelper() {
                 final LoggedInState currentState = loggedInViewModel.getState();
                 currentState.setPassword(passwordInputField.getText());
@@ -80,24 +77,20 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             }
         });
 
-        changePassword.addActionListener(
-                // This creates an anonymous subclass of ActionListener and instantiates it.
-                evt -> {
-                    if (evt.getSource().equals(changePassword)) {
-                        final LoggedInState currentState = loggedInViewModel.getState();
+        changePassword.addActionListener(evt -> {
+            if (evt.getSource().equals(changePassword)) {
+                final LoggedInState currentState = loggedInViewModel.getState();
 
-                        this.changePasswordController.execute(
-                                currentState.getUsername(),
-                                currentState.getPassword()
-                        );
-                    }
-                }
-        );
+                this.changePasswordController.execute(
+                        currentState.getUsername(),
+                        currentState.getPassword()
+                );
+            }
+        });
 
         this.add(title);
         this.add(usernameInfo);
         this.add(username);
-
         this.add(passwordInfo);
         this.add(passwordErrorField);
         this.add(buttons);
@@ -108,8 +101,9 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
      * @param evt the ActionEvent to react to
      */
     public void actionPerformed(ActionEvent evt) {
-        // TODO: execute the logout use case through the Controller
-        System.out.println("Click " + evt.getActionCommand());
+        if (evt.getSource().equals(logOut) && logoutController != null) {
+            logoutController.execute(); // ✅ Run the logout use case
+        }
     }
 
     @Override
@@ -117,18 +111,15 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         if (evt.getPropertyName().equals("state")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
             username.setText(state.getUsername());
-        }
-        else if (evt.getPropertyName().equals("password")) {
+        } else if (evt.getPropertyName().equals("password")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
             if (state.getPasswordError() == null) {
                 JOptionPane.showMessageDialog(this, "password updated for " + state.getUsername());
                 passwordInputField.setText("");
-            }
-            else {
+            } else {
                 JOptionPane.showMessageDialog(this, state.getPasswordError());
             }
         }
-
     }
 
     public String getViewName() {
@@ -140,6 +131,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     }
 
     public void setLogoutController(LogoutController logoutController) {
-        // TODO: save the logout controller in the instance variable.
+        // ✅ Save the logout controller in the instance variable
+        this.logoutController = logoutController;
     }
 }
+
